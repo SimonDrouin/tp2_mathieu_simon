@@ -34,6 +34,7 @@ class Emprunt
   # Des indications de largeur, justification, etc. peuvent aussi être
   # spécifiées, par exemple, %-10A, %-.10A, etc.
   #
+  # %[flags][width][.precision]type
   def to_s( le_format = nil )
     # Format simple par defaut, pour les cas de tests de base.a
     perdu = perdu? ? ' [[PERDU]]' : ''
@@ -41,7 +42,14 @@ class Emprunt
       return format('%s :: [ %-10s ] "%s"', nom, auteurs, titre) << perdu
     end
 
-    fail "Cas non traite: to_s( #{le_format} )"
+    elems_format = []
+    new_format = le_format.gsub(/%(-?\.?\d+)?\D/) do |match|
+      elems_format.push(format_value(match[-1]))
+
+      match.gsub(/[NCTA]/, "s")
+    end
+
+    return (new_format % elems_format) << perdu
   end
 
 
@@ -49,6 +57,14 @@ class Emprunt
   # Ordonne les emprunts selon le nom en premier, puis selon le titre.
   #
   def <=>( autre )
+    return nil if autre.nil?
+    return nil unless autre.class == self.class
+
+    nameComparison = self.nom <=> autre.nom
+    return nameComparison unless nameComparison == 0
+
+    titleComparison = self.titre <=> autre.titre
+    titleComparison == 0 ? nil : titleComparison
   end
 
   #
@@ -61,5 +77,22 @@ class Emprunt
   # Attribut booleen, donc nom avec '?'.
   def perdu?
     @perdu
+  end
+end
+
+private
+
+def format_value(letter)
+  case letter
+    when 'N'
+      @nom
+    when 'C'
+      @courriel
+    when 'T'
+      @titre
+    when 'A'
+      auteurs
+    else
+      fail "Cas non traite: to_s( #{letter} )"
   end
 end

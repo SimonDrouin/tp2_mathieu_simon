@@ -44,26 +44,26 @@ end
 ###################################################
 
 def aide
-    <<EOF
-NOM
-  #{$0} -- Script pour la gestion de prets de livres
+  <<-EOF
+    NOM
+      #{$0} -- Script pour la gestion de prets de livres
 
-SYNOPSIS
-  #{$0} [--depot=fich] commande [options-commande] [argument...]
+    SYNOPSIS
+      #{$0} [--depot=fich] commande [options-commande] [argument...]
 
-COMMANDES
-  aide           - Emet la liste des commandes
-  emprunter      - Indique l'emprunt d'un (ou plusieurs) livre(s)
-  emprunteur     - Emet l'emprunteur d'un livre
-  emprunts       - Emet les livres empruntes par quelqu'un
-  init           - Cree une nouvelle base de donnees pour gerer des livres empruntes
-                   (dans './#{DEPOT_PAR_DEFAUT}' si --depot n'est pas specifie)
-  indiquer_perte - Indique la perte du livre indique
-  lister         - Emet l'ensemble des livres empruntes
-  rapporter      - Indique le retour d'un (ou plusieurs) livre(s)
-  trouver        - Trouve le titre complet d'un livre
-                   ou les titres qui contiennent la chaine
-EOF
+    COMMANDES
+      aide           - Emet la liste des commandes
+      emprunter      - Indique l'emprunt d'un (ou plusieurs) livre(s)
+      emprunteur     - Emet l'emprunteur d'un livre
+      emprunts       - Emet les livres empruntes par quelqu'un
+      init           - Cree une nouvelle base de donnees pour gerer des livres empruntes
+                       (dans './#{DEPOT_PAR_DEFAUT}' si --depot n'est pas specifie)
+      indiquer_perte - Indique la perte du livre indique
+      lister         - Emet l'ensemble des livres empruntes
+      rapporter      - Indique le retour d'un (ou plusieurs) livre(s)
+      trouver        - Trouve le titre complet d'un livre
+                       ou les titres qui contiennent la chaine
+  EOF
 end
 
 ###################################################
@@ -133,9 +133,9 @@ def lister( les_emprunts )
   # Si le livre est perdu, alors l'annotation utilisee est [[PERDU]]!
   # (Pcq. sinon la mise en page emacs n'est pas bonne avec <<PERDU>>!)
   #
+  emprunts_string = les_emprunts.join("\n") + "\n"
 
-  listing = '' # A MODIFIER!
-  [les_emprunts, listing]
+  [les_emprunts, emprunts_string]
 end
 
 
