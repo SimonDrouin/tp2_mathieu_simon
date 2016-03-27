@@ -1,0 +1,11 @@
+Depot pour Labo ou devoir 2 en INF600A, Hiver 2016.
+
+Principaux fichiers:
+
+- biblio.rb: Le programme a completer
+
+- features: les tests d'acceptation
+
+- makefile: les cibles pour les "run", tests, etc.
+
+

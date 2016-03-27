@@ -1,0 +1,2 @@
+"Guy Tremblay" @ "Pragmatic Thinking & Learning" "Thomas"
+"Guy Tremblay" tremblay.guy@uqam.ca "The Ruby Way" "Fulton"
