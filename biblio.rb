@@ -12,6 +12,10 @@ SEP = SEPARATEUR  # Un alias pour alleger les expr. reg.
 
 DEPOT_PAR_DEFAUT = '.biblio.txt'
 
+OPTIONS = {
+  depot: DEPOT_PAR_DEFAUT
+}
+
 ###################################################
 # Fonctions pour debogage et traitement des erreurs.
 ###################################################
@@ -73,13 +77,9 @@ end
 # fonctionnement minimal du logiciel.
 ###################################################
 
-def definir_depot
-  depot ||= DEPOT_PAR_DEFAUT
-
-  depot
-end
-
-def init( depot )
+def init
+  depot = OPTIONS[:depot]
+  detruire = OPTIONS[:detruire]
 
   if File.exists? depot
     if detruire
@@ -92,7 +92,8 @@ def init( depot )
   FileUtils.touch depot
 end
 
-def charger_emprunts( depot )
+def charger_emprunts
+  depot = OPTIONS[:depot]
   erreur "Le fichier '#{depot}' n'existe pas!" unless File.exists? depot
 
   # On lit les emprunts du fichier.
@@ -103,7 +104,9 @@ def charger_emprunts( depot )
   end
 end
 
-def sauver_emprunts( depot, les_emprunts )
+def sauver_emprunts(les_emprunts )
+  depot = OPTIONS[:depot]
+
   # On cree une copie de sauvegarde.
   FileUtils.cp depot, "#{depot}.bak"
 
@@ -122,17 +125,14 @@ def sauver_emprunts( depot, les_emprunts )
   end
 end
 
-
 #################################################################
 # Les fonctions pour les diverses commandes de l'application.
 #################################################################
 
 def lister( les_emprunts )
-  #
-  # Remarque (difference par rapport a la version biblio.sh):
-  # Si le livre est perdu, alors l'annotation utilisee est [[PERDU]]!
-  # (Pcq. sinon la mise en page emacs n'est pas bonne avec <<PERDU>>!)
-  #
+  return [les_emprunts, nil] unless les_emprunts
+
+  # TODO dealer avec le format
   emprunts_string = les_emprunts.join("\n") + "\n"
 
   [les_emprunts, emprunts_string]
@@ -140,6 +140,8 @@ end
 
 
 def emprunter( les_emprunts )
+
+
   [les_emprunts, nil] # A MODIFIER!
 end
 
@@ -182,6 +184,35 @@ COMMANDES = [:emprunter,
              :trouver,
             ]
 
+def get_commande_and_parse_arguments
+  commande = nil
+  while not ARGV.empty? do
+    arg = (ARGV.shift || :aide)
+
+    if COMMANDES.include? arg.to_sym
+      erreur "Commande en trop" if commande
+      commande = arg.to_sym
+    end
+
+    (puts aide; exit 0) if commande == :aide
+
+    case arg
+      when "--detruire"
+        OPTIONS[:detruire] = true
+      when /--depot=.*/
+        # On definit le depot a utiliser, possiblement via l'option.
+        OPTIONS[:depot] = arg.scan(/[^=]*$/).first
+
+        debug "On utilise le depot suivant: #{OPTIONS.fetch(:depot)}"
+      when /--format=.*/
+        OPTIONS[:format] = arg.scan(/[^=]*$/).first
+      end
+  end
+
+  erreur "Aucune commande passée en paramètres" if commande.nil?
+  commande
+end
+
 #######################################################
 # Le programme principal
 #######################################################
@@ -207,25 +238,18 @@ COMMANDES = [:emprunter,
 #    resultat a afficher).
 #
 
-# On definit le depot a utiliser, possiblement via l'option.
-depot = definir_depot
-
-debug "On utilise le depot suivant: #{depot}"
 
 # On analyse la commande indiquee en argument.
-commande = (ARGV.shift || :aide).to_sym
-(puts aide; exit 0) if commande == :aide
-
-erreur "Commande inconnue: '#{commande}'" unless COMMANDES.include? commande
+commande = get_commande_and_parse_arguments
 
 # La commande est valide: on l'execute et on affiche son resultat.
 if commande == :init
-  init( depot )
+  init
 else
-  les_emprunts = charger_emprunts( depot )
+  les_emprunts = charger_emprunts
   les_emprunts, resultat = send commande, les_emprunts
   print resultat if resultat   # Note: print n'ajoute pas de saut de ligne!
-  sauver_emprunts( depot, les_emprunts )
+  sauver_emprunts les_emprunts
 end
 
 erreur "Argument(s) en trop: '#{ARGV.join(' ')}'" unless ARGV.empty?
