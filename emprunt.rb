@@ -35,7 +35,7 @@ class Emprunt
   # spécifiées, par exemple, %-10A, %-.10A, etc.
   #
   # %[flags][width][.precision]type
-  def to_s( le_format = nil )
+  def to_s(le_format = nil)
     # Format simple par defaut, pour les cas de tests de base.a
     perdu = perdu? ? ' [[PERDU]]' : ''
     if le_format.nil?

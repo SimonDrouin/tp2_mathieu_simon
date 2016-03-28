@@ -132,30 +132,57 @@ end
 def lister( les_emprunts )
   return [les_emprunts, nil] unless les_emprunts
 
-  # TODO dealer avec le format
-  emprunts_string = les_emprunts.join("\n") + "\n"
+  emprunts_string = les_emprunts.map {|emprunt| emprunt.to_s(OPTIONS[:format]) }.join("\n") + "\n"
 
   [les_emprunts, emprunts_string]
 end
 
 
 def emprunter( les_emprunts )
+  nom, courriel, titre, auteurs = ARGV.shift, ARGV.shift, ARGV.shift, ARGV.shift
+  erreur "Nombre incorrect d'arguments" unless nom && courriel && titre && auteurs
 
-
-  [les_emprunts, nil] # A MODIFIER!
+  les_emprunts = les_emprunts.push(Emprunt.new(nom, courriel, titre, auteurs))
+  [les_emprunts, nil]
 end
 
 def emprunts( les_emprunts )
-  liste_emprunts = '' # A MODIFIER!
+  nom_emprunteur = ARGV.shift
+  erreur "Emprunteur absent" unless emprunteur
+
+  liste_emprunts = les_emprunts.select do |emprunt|
+    emprunt.nom == nom_emprunteur
+  end
+
   [les_emprunts, liste_emprunts]
 end
 
 def rapporter( les_emprunts )
-  [les_emprunts, nil] # A MODIFIER!
+  titre = ARGV.shift
+  erreur "titre manquant" unless titre
+
+  emprunt = les_emprunts.select{ |emprunt| emprunt.titre == titre }.first
+  les_emprunts.delete(emprunt)
+
+  [les_emprunts, nil]
 end
 
 def trouver( les_emprunts )
-  liste_titres = '' # A MODIFIER!
+  queries = []
+  loop do
+    arg = ARGV.shift
+    break unless arg
+
+    queries.push arg
+  end
+  error "mot cle(s) invalide(s)" unless queries
+
+  liste_titres = queries.map do |query|
+    les_emprunts.select do |emprunt|
+      emprunt =~ /.*#{query}.*/
+    end.first
+  end
+
   [les_emprunts, liste_titres]
 end
 
@@ -164,7 +191,12 @@ def indiquer_perte( les_emprunts )
 end
 
 def emprunteur( les_emprunts )
-  nom_emprunteur = "\n"  # A MODIFIER!
+  titre = ARGV.shift
+  erreur "titre absent" unless titre
+
+  nom_emprunteur = les_emprunts.select do |emprunt|
+    emprunt.titre == titre
+  end.first.nom
 
   [les_emprunts, nom_emprunteur]
 end
@@ -186,17 +218,14 @@ COMMANDES = [:emprunter,
 
 def get_commande_and_parse_arguments
   commande = nil
-  while not ARGV.empty? do
+  while (ARGV.detect {|arg| arg =~ /--.*/ || COMMANDES.include?(arg.to_sym) }) do
     arg = (ARGV.shift || :aide)
 
     if COMMANDES.include? arg.to_sym
       erreur "Commande en trop" if commande
       commande = arg.to_sym
-    end
-
-    (puts aide; exit 0) if commande == :aide
-
-    case arg
+    else
+      case arg
       when "--detruire"
         OPTIONS[:detruire] = true
       when /--depot=.*/
@@ -207,6 +236,9 @@ def get_commande_and_parse_arguments
       when /--format=.*/
         OPTIONS[:format] = arg.scan(/[^=]*$/).first
       end
+    end
+
+    (puts aide; exit 0) if commande == :aide
   end
 
   erreur "Aucune commande passée en paramètres" if commande.nil?
@@ -249,7 +281,7 @@ else
   les_emprunts = charger_emprunts
   les_emprunts, resultat = send commande, les_emprunts
   print resultat if resultat   # Note: print n'ajoute pas de saut de ligne!
-  sauver_emprunts les_emprunts
+  sauver_emprunts les_emprunts.sort
 end
 
 erreur "Argument(s) en trop: '#{ARGV.join(' ')}'" unless ARGV.empty?
