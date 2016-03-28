@@ -169,23 +169,15 @@ def rapporter( les_emprunts )
 end
 
 def trouver( les_emprunts )
-  queries = []
-  loop do
-    arg = ARGV.shift
-    break unless arg
+  query = ARGV.shift
+  error "mot cle(s) invalide(s)" unless query
 
-    queries.push arg
-  end
+  titres = les_emprunts.select do |e|
+    q = query.downcase
+    e.titre.downcase =~ /[^(#{q})]*#{q}.*/
+  end.map{ |e| e.titre }
 
-  error "mot cle(s) invalide(s)" unless queries
-
-  liste_titres = queries.select do |query|
-    les_emprunts.select do |emprunt|
-      emprunt =~ /.*#{query}.*/
-    end.first
-  end
-
-  [les_emprunts, liste_titres]
+  [les_emprunts, titres.join("\n") + "\n"]
 end
 
 def indiquer_perte( les_emprunts )
