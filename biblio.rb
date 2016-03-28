@@ -130,8 +130,6 @@ end
 #################################################################
 
 def lister( les_emprunts )
-  return [les_emprunts, nil] unless les_emprunts
-
   emprunts_string = les_emprunts.map {|emprunt| emprunt.to_s(OPTIONS[:format]) }.join("\n") + "\n"
 
   [les_emprunts, emprunts_string]
@@ -139,11 +137,16 @@ end
 
 
 def emprunter( les_emprunts )
-  nom, courriel, titre, auteurs = ARGV.shift, ARGV.shift, ARGV.shift, ARGV.shift
-  erreur "Nombre incorrect d'arguments" unless nom && courriel && titre && auteurs
+  erreur "Nombre incorrect d'arguments" unless ARGV.size % 4  == 0
 
-  les_emprunts = les_emprunts.push(Emprunt.new(nom, courriel, titre, auteurs))
-  [les_emprunts, nil]
+  nouveaux_emprunts =
+    (1..ARGV.size / 4).collect do
+      nom, courriel, titre, auteurs = ARGV.shift(4)
+
+      Emprunt.new(nom, courriel, titre, auteurs)
+    end
+
+  [les_emprunts + nouveaux_emprunts, nil]
 end
 
 def emprunts( les_emprunts )
@@ -175,9 +178,10 @@ def trouver( les_emprunts )
 
     queries.push arg
   end
+
   error "mot cle(s) invalide(s)" unless queries
 
-  liste_titres = queries.map do |query|
+  liste_titres = queries.select do |query|
     les_emprunts.select do |emprunt|
       emprunt =~ /.*#{query}.*/
     end.first
@@ -280,6 +284,7 @@ if commande == :init
 else
   les_emprunts = charger_emprunts
   les_emprunts, resultat = send commande, les_emprunts
+  #TODO`>&2 echo "EMPRUNTS: #{les_emprunts.inspect}"`
   print resultat if resultat   # Note: print n'ajoute pas de saut de ligne!
   sauver_emprunts les_emprunts.sort
 end
