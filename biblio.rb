@@ -150,14 +150,12 @@ def emprunter( les_emprunts )
 end
 
 def emprunts( les_emprunts )
-  nom_emprunteur = ARGV.shift
-  erreur "Emprunteur absent" unless emprunteur
+  nom = ARGV.shift
+  erreur "Emprunteur absent" unless nom
 
-  liste_emprunts = les_emprunts.select do |emprunt|
-    emprunt.nom == nom_emprunteur
-  end
+  titres = les_emprunts.select {|e| e.nom == nom }.map {|e| e.titre }
 
-  [les_emprunts, liste_emprunts]
+  [les_emprunts, titres.join("\n") + "\n"]
 end
 
 def rapporter( les_emprunts )
@@ -284,7 +282,8 @@ if commande == :init
 else
   les_emprunts = charger_emprunts
   les_emprunts, resultat = send commande, les_emprunts
-  #TODO`>&2 echo "EMPRUNTS: #{les_emprunts.inspect}"`
+  #`>&2 echo "EMPRUNTS: #{les_emprunts.inspect}"`
+  #{}`>&2 echo "RESULTATS: #{resultat.inspect}"`
   print resultat if resultat   # Note: print n'ajoute pas de saut de ligne!
   sauver_emprunts les_emprunts.sort
 end
