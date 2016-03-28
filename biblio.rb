@@ -130,9 +130,9 @@ end
 #################################################################
 
 def lister( les_emprunts )
-  emprunts_string = les_emprunts.map {|emprunt| emprunt.to_s(OPTIONS[:format]) }.join("\n") + "\n"
+  emprunts = les_emprunts.map {|emprunt| emprunt.to_s(OPTIONS[:format]) }
 
-  [les_emprunts, emprunts_string]
+  [les_emprunts, emprunts.join("\n")]
 end
 
 
@@ -155,7 +155,7 @@ def emprunts( les_emprunts )
 
   titres = les_emprunts.select {|e| e.nom == nom }.map {|e| e.titre }
 
-  [les_emprunts, titres.join("\n") + "\n"]
+  [les_emprunts, titres.join("\n")]
 end
 
 def rapporter( les_emprunts )
@@ -177,7 +177,7 @@ def trouver( les_emprunts )
     e.titre.downcase =~ /[^(#{q})]*#{q}.*/
   end.map{ |e| e.titre }
 
-  [les_emprunts, titres.join("\n") + "\n"]
+  [les_emprunts, titres.join("\n")]
 end
 
 def indiquer_perte( les_emprunts )
@@ -276,7 +276,7 @@ else
   les_emprunts, resultat = send commande, les_emprunts
   #`>&2 echo "EMPRUNTS: #{les_emprunts.inspect}"`
   #{}`>&2 echo "RESULTATS: #{resultat.inspect}"`
-  print resultat if resultat   # Note: print n'ajoute pas de saut de ligne!
+  print resultat + "\n" if resultat   # Note: print n'ajoute pas de saut de ligne!
   sauver_emprunts les_emprunts.sort
 end
 
