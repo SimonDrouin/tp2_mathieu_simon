@@ -210,7 +210,7 @@ COMMANDES = [:emprunter,
              :trouver,
             ]
 
-def get_commande_and_parse_arguments
+def get_commande_and_parse_options
   commande = nil
   while (ARGV.detect {|arg| arg =~ /--.*/ || COMMANDES.include?(arg.to_sym) }) do
     arg = (ARGV.shift || :aide)
@@ -266,7 +266,7 @@ end
 
 
 # On analyse la commande indiquee en argument.
-commande = get_commande_and_parse_arguments
+commande = get_commande_and_parse_options
 
 # La commande est valide: on l'execute et on affiche son resultat.
 if commande == :init
@@ -274,8 +274,6 @@ if commande == :init
 else
   les_emprunts = charger_emprunts
   les_emprunts, resultat = send commande, les_emprunts
-  #`>&2 echo "EMPRUNTS: #{les_emprunts.inspect}"`
-  #{}`>&2 echo "RESULTATS: #{resultat.inspect}"`
   print resultat + "\n" if resultat   # Note: print n'ajoute pas de saut de ligne!
   sauver_emprunts les_emprunts.sort
 end
