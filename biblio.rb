@@ -216,11 +216,10 @@ def emprunteur( les_emprunts )
   titre = ARGV.shift
   erreur "titre absent" unless titre
 
-  nom_emprunteur = les_emprunts.select do |emprunt|
-    emprunt.titre == titre
-  end.first.nom
+  emprunteur = les_emprunts.select { |e| e.titre == titre }.first
+  erreur "Aucun livre emprunte: #{titre}" unless emprunteur
 
-  [les_emprunts, nom_emprunteur]
+  [les_emprunts, emprunteur.nom]
 end
 
 
