@@ -212,27 +212,30 @@ COMMANDES = [:emprunter,
 
 def get_commande_and_parse_options
   commande = nil
-  while (ARGV.detect {|arg| arg =~ /--.*/ || COMMANDES.include?(arg.to_sym) }) do
-    arg = (ARGV.shift || :aide)
 
-    if COMMANDES.include? arg.to_sym
-      erreur "Commande en trop" if commande
-      commande = arg.to_sym
-    else
-      case arg
-      when "--detruire"
-        OPTIONS[:detruire] = true
-      when /--depot=.*/
-        # On definit le depot a utiliser, possiblement via l'option.
-        OPTIONS[:depot] = arg.scan(/[^=]*$/).first
+  (1..ARGV.size).collect do
+    if ARGV.detect {|arg| arg =~ /--.*/ || COMMANDES.include?(arg.to_sym) }
+      arg = (ARGV.shift || :aide)
 
-        debug "On utilise le depot suivant: #{OPTIONS.fetch(:depot)}"
-      when /--format=.*/
-        OPTIONS[:format] = arg.scan(/[^=]*$/).first
+      if COMMANDES.include? arg.to_sym
+        erreur "Commande en trop" if commande
+        commande = arg.to_sym
+      else
+        case arg
+        when "--detruire"
+          OPTIONS[:detruire] = true
+        when /--depot=.*/
+          # On definit le depot a utiliser, possiblement via l'option.
+          OPTIONS[:depot] = arg.scan(/[^=]*$/).first
+
+          debug "On utilise le depot suivant: #{OPTIONS.fetch(:depot)}"
+        when /--format=.*/
+          OPTIONS[:format] = arg.scan(/[^=]*$/).first
+        end
       end
-    end
 
-    (puts aide; exit 0) if commande == :aide
+      (puts aide; exit 0) if commande == :aide
+    end
   end
 
   erreur "Aucune commande passée en paramètres" if commande.nil?
