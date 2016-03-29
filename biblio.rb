@@ -12,6 +12,10 @@ SEP = SEPARATEUR  # Un alias pour alleger les expr. reg.
 
 DEPOT_PAR_DEFAUT = '.biblio.txt'
 
+OPTIONS = {
+  depot: DEPOT_PAR_DEFAUT
+}
+
 ###################################################
 # Fonctions pour debogage et traitement des erreurs.
 ###################################################
@@ -44,26 +48,26 @@ end
 ###################################################
 
 def aide
-    <<EOF
-NOM
-  #{$0} -- Script pour la gestion de prets de livres
+  <<-EOF
+    NOM
+      #{$0} -- Script pour la gestion de prets de livres
 
-SYNOPSIS
-  #{$0} [--depot=fich] commande [options-commande] [argument...]
+    SYNOPSIS
+      #{$0} [--depot=fich] commande [options-commande] [argument...]
 
-COMMANDES
-  aide           - Emet la liste des commandes
-  emprunter      - Indique l'emprunt d'un (ou plusieurs) livre(s)
-  emprunteur     - Emet l'emprunteur d'un livre
-  emprunts       - Emet les livres empruntes par quelqu'un
-  init           - Cree une nouvelle base de donnees pour gerer des livres empruntes
-                   (dans './#{DEPOT_PAR_DEFAUT}' si --depot n'est pas specifie)
-  indiquer_perte - Indique la perte du livre indique
-  lister         - Emet l'ensemble des livres empruntes
-  rapporter      - Indique le retour d'un (ou plusieurs) livre(s)
-  trouver        - Trouve le titre complet d'un livre
-                   ou les titres qui contiennent la chaine
-EOF
+    COMMANDES
+      aide           - Emet la liste des commandes
+      emprunter      - Indique l'emprunt d'un (ou plusieurs) livre(s)
+      emprunteur     - Emet l'emprunteur d'un livre
+      emprunts       - Emet les livres empruntes par quelqu'un
+      init           - Cree une nouvelle base de donnees pour gerer des livres empruntes
+                       (dans './#{DEPOT_PAR_DEFAUT}' si --depot n'est pas specifie)
+      indiquer_perte - Indique la perte du livre indique
+      lister         - Emet l'ensemble des livres empruntes
+      rapporter      - Indique le retour d'un (ou plusieurs) livre(s)
+      trouver        - Trouve le titre complet d'un livre
+                       ou les titres qui contiennent la chaine
+  EOF
 end
 
 ###################################################
@@ -73,13 +77,9 @@ end
 # fonctionnement minimal du logiciel.
 ###################################################
 
-def definir_depot
-  depot ||= DEPOT_PAR_DEFAUT
-
-  depot
-end
-
-def init( depot )
+def init
+  depot = OPTIONS[:depot]
+  detruire = OPTIONS[:detruire]
 
   if File.exists? depot
     if detruire
@@ -92,7 +92,8 @@ def init( depot )
   FileUtils.touch depot
 end
 
-def charger_emprunts( depot )
+def charger_emprunts
+  depot = OPTIONS[:depot]
   erreur "Le fichier '#{depot}' n'existe pas!" unless File.exists? depot
 
   # On lit les emprunts du fichier.
@@ -103,7 +104,9 @@ def charger_emprunts( depot )
   end
 end
 
-def sauver_emprunts( depot, les_emprunts )
+def sauver_emprunts(les_emprunts )
+  depot = OPTIONS[:depot]
+
   # On cree une copie de sauvegarde.
   FileUtils.cp depot, "#{depot}.bak"
 
@@ -122,39 +125,59 @@ def sauver_emprunts( depot, les_emprunts )
   end
 end
 
-
 #################################################################
 # Les fonctions pour les diverses commandes de l'application.
 #################################################################
 
 def lister( les_emprunts )
-  #
-  # Remarque (difference par rapport a la version biblio.sh):
-  # Si le livre est perdu, alors l'annotation utilisee est [[PERDU]]!
-  # (Pcq. sinon la mise en page emacs n'est pas bonne avec <<PERDU>>!)
-  #
+  emprunts = les_emprunts.map {|emprunt| emprunt.to_s(OPTIONS[:format]) }
 
-  listing = '' # A MODIFIER!
-  [les_emprunts, listing]
+  [les_emprunts, emprunts.join("\n")]
 end
 
 
 def emprunter( les_emprunts )
-  [les_emprunts, nil] # A MODIFIER!
+  erreur "Nombre incorrect d'arguments" unless ARGV.size % 4  == 0
+
+  nouveaux_emprunts =
+    (1..ARGV.size / 4).collect do
+      nom, courriel, titre, auteurs = ARGV.shift(4)
+
+      Emprunt.new(nom, courriel, titre, auteurs)
+    end
+
+  [les_emprunts + nouveaux_emprunts, nil]
 end
 
 def emprunts( les_emprunts )
-  liste_emprunts = '' # A MODIFIER!
-  [les_emprunts, liste_emprunts]
+  nom = ARGV.shift
+  erreur "Emprunteur absent" unless nom
+
+  titres = les_emprunts.select {|e| e.nom == nom }.map {|e| e.titre }
+
+  [les_emprunts, titres.join("\n")]
 end
 
 def rapporter( les_emprunts )
-  [les_emprunts, nil] # A MODIFIER!
+  titre = ARGV.shift
+  erreur "titre manquant" unless titre
+
+  emprunt = les_emprunts.select{ |emprunt| emprunt.titre == titre }.first
+  les_emprunts.delete(emprunt)
+
+  [les_emprunts, nil]
 end
 
 def trouver( les_emprunts )
-  liste_titres = '' # A MODIFIER!
-  [les_emprunts, liste_titres]
+  query = ARGV.shift
+  error "mot cle(s) invalide(s)" unless query
+
+  titres = les_emprunts.select do |e|
+    q = query.downcase
+    e.titre.downcase =~ /[^(#{q})]*#{q}.*/
+  end.map{ |e| e.titre }
+
+  [les_emprunts, titres.join("\n")]
 end
 
 def indiquer_perte( les_emprunts )
@@ -162,7 +185,12 @@ def indiquer_perte( les_emprunts )
 end
 
 def emprunteur( les_emprunts )
-  nom_emprunteur = "\n"  # A MODIFIER!
+  titre = ARGV.shift
+  erreur "titre absent" unless titre
+
+  nom_emprunteur = les_emprunts.select do |emprunt|
+    emprunt.titre == titre
+  end.first.nom
 
   [les_emprunts, nom_emprunteur]
 end
@@ -181,6 +209,35 @@ COMMANDES = [:emprunter,
              :rapporter,
              :trouver,
             ]
+
+def get_commande_and_parse_options
+  commande = nil
+  while (ARGV.detect {|arg| arg =~ /--.*/ || COMMANDES.include?(arg.to_sym) }) do
+    arg = (ARGV.shift || :aide)
+
+    if COMMANDES.include? arg.to_sym
+      erreur "Commande en trop" if commande
+      commande = arg.to_sym
+    else
+      case arg
+      when "--detruire"
+        OPTIONS[:detruire] = true
+      when /--depot=.*/
+        # On definit le depot a utiliser, possiblement via l'option.
+        OPTIONS[:depot] = arg.scan(/[^=]*$/).first
+
+        debug "On utilise le depot suivant: #{OPTIONS.fetch(:depot)}"
+      when /--format=.*/
+        OPTIONS[:format] = arg.scan(/[^=]*$/).first
+      end
+    end
+
+    (puts aide; exit 0) if commande == :aide
+  end
+
+  erreur "Aucune commande passée en paramètres" if commande.nil?
+  commande
+end
 
 #######################################################
 # Le programme principal
@@ -207,25 +264,18 @@ COMMANDES = [:emprunter,
 #    resultat a afficher).
 #
 
-# On definit le depot a utiliser, possiblement via l'option.
-depot = definir_depot
-
-debug "On utilise le depot suivant: #{depot}"
 
 # On analyse la commande indiquee en argument.
-commande = (ARGV.shift || :aide).to_sym
-(puts aide; exit 0) if commande == :aide
-
-erreur "Commande inconnue: '#{commande}'" unless COMMANDES.include? commande
+commande = get_commande_and_parse_options
 
 # La commande est valide: on l'execute et on affiche son resultat.
 if commande == :init
-  init( depot )
+  init
 else
-  les_emprunts = charger_emprunts( depot )
+  les_emprunts = charger_emprunts
   les_emprunts, resultat = send commande, les_emprunts
-  print resultat if resultat   # Note: print n'ajoute pas de saut de ligne!
-  sauver_emprunts( depot, les_emprunts )
+  print resultat + "\n" if resultat   # Note: print n'ajoute pas de saut de ligne!
+  sauver_emprunts les_emprunts.sort
 end
 
 erreur "Argument(s) en trop: '#{ARGV.join(' ')}'" unless ARGV.empty?
