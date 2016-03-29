@@ -169,7 +169,10 @@ def emprunter( les_emprunts )
       end
     end
 
-  les_emprunts = les_emprunts + nouveaux_emprunts.select{|k| not k.nil?} unless erreur
+  titres = nouveaux_emprunts.select{|e| not(e.nil?)}.map{|e| e.titre}
+  erreur "livre avec le meme titre deja emprunte" if les_emprunts.detect{|e| titres.include?(e.titre)}
+
+  les_emprunts = les_emprunts + nouveaux_emprunts.select{|e| not e.nil?} unless erreur
   #p les_emprunts
   [les_emprunts, nil]
 end
