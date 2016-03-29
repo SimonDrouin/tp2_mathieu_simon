@@ -274,7 +274,7 @@ if commande == :init
 else
   les_emprunts = charger_emprunts
   les_emprunts, resultat = send commande, les_emprunts
-  print resultat + "\n" if resultat && resultat.empty?
+  print resultat + "\n" if resultat && not resultat.empty?
   sauver_emprunts les_emprunts.sort
 end
 
