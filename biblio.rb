@@ -139,14 +139,39 @@ end
 def emprunter( les_emprunts )
   erreur "Nombre incorrect d'arguments" unless ARGV.size % 4  == 0
 
+  erreur = false
   nouveaux_emprunts =
-    (1..ARGV.size / 4).collect do
-      nom, courriel, titre, auteurs = ARGV.shift(4)
+    if ARGV.size > 0
+      (1..ARGV.size / 4).collect do
+        nom, courriel, titre, auteurs = ARGV.shift(4)
 
-      Emprunt.new(nom, courriel, titre, auteurs)
+        Emprunt.new(nom, courriel, titre, auteurs)
+      end
+    else
+      lines = STDIN.readlines
+      lines.map do |line|
+        line = line.strip
+        if line != ""
+          val = nil #TODO
+
+          motif = /\"(.*)\" (.*@.*) \"(.*)\" \"(.*)\"/
+          parsed_line = motif.match line
+
+          if parsed_line && parsed_line.size == 5
+            nom, courriel, titre, auteurs = parsed_line[1], parsed_line[2], parsed_line[3], parsed_line[4]
+            val = Emprunt.new(nom, courriel, titre, auteurs)
+          else # ligne non vide mais invalide.
+            erreur = true
+          end
+
+          val
+        end
+      end
     end
 
-  [les_emprunts + nouveaux_emprunts, nil]
+  les_emprunts = les_emprunts + nouveaux_emprunts.select{|k| not k.nil?} unless erreur
+  #p les_emprunts
+  [les_emprunts, nil]
 end
 
 def emprunts( les_emprunts )
