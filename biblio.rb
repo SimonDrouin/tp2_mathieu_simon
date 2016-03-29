@@ -253,11 +253,11 @@ def get_commande_and_parse_options
           OPTIONS[:detruire] = true
         when /--depot=.*/
           # On definit le depot a utiliser, possiblement via l'option.
-          OPTIONS[:depot] = arg.scan(/[^=]*$/).first
+          arg.scan(/--depot=(.*)$/) {|m| OPTIONS[:depot] = m.first}
 
           debug "On utilise le depot suivant: #{OPTIONS.fetch(:depot)}"
         when /--format=.*/
-          OPTIONS[:format] = arg.scan(/[^=]*$/).first
+          arg.scan(/--format=(.*)$/) {|m| OPTIONS[:format] = m.first}
         end
       end
 
