@@ -157,11 +157,13 @@ def emprunter( les_emprunts )
           motif = /\"([^\"]*)\" ([^\"]*@[^\"]*) \"([^\"]*)\" \"([^\"]*)\"(.*)/
           parsed_line = motif.match line
 
-          if parsed_line && parsed_line[5] == ""
+          if parsed_line.nil?
+            STDERR.puts "Format incorrect"
+          elsif parsed_line[5] != ""
+            STDERR.puts "Nombre incorrect d'arguments"
+          else
             nom, courriel, titre, auteurs = parsed_line[1], parsed_line[2], parsed_line[3], parsed_line[4]
             val = Emprunt.new(nom, courriel, titre, auteurs)
-          else # ligne non vide mais invalide.
-            STDERR.puts "Nombre incorrect d'arguments"
           end
 
           val
