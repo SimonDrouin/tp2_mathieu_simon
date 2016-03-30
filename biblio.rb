@@ -187,13 +187,30 @@ def emprunts( les_emprunts )
 end
 
 def rapporter( les_emprunts )
-  titre = ARGV.shift
-  erreur "titre manquant" unless titre
+  titres =
+    if ARGV.size > 0
+      (1..ARGV.size).collect do
+        titre = ARGV.shift
+      end
+    else
+      lines = STDIN.readlines
+      lines.map do |line|
+        line = line.strip
+        if line != ""
+          motif = /\"(.*)\"/
+          parsed_line = motif.match line
 
-  emprunt = les_emprunts.select{ |emprunt| emprunt.titre == titre }.first
-  les_emprunts.delete(emprunt)
+          val = parsed_line[1]
+        end
 
-  [les_emprunts, nil]
+        val
+      end.select{ |t| not(t.nil?) }
+    end
+
+  titres_introuvables = titres.select{|t| not(les_emprunts.any?{|e| e.titre == t }) }
+  erreur "Aucun livre avec titre #{titres_introuvables.first}" unless titres_introuvables.empty?
+
+  [les_emprunts.select{|e| not(titres.include?(e.titre))}, nil]
 end
 
 def trouver( les_emprunts )
