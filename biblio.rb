@@ -137,11 +137,10 @@ end
 
 
 def emprunter( les_emprunts )
-  erreur "Nombre incorrect d'arguments" unless ARGV.size % 4  == 0
-
-  erreur = false
   nouveaux_emprunts =
     if ARGV.size > 0
+      erreur_nb_arguments ARGV if ARGV.size < 4
+
       (1..ARGV.size / 4).collect do
         nom, courriel, titre, auteurs = ARGV.shift(4)
 
@@ -152,15 +151,13 @@ def emprunter( les_emprunts )
       lines.map do |line|
         line = line.strip
         if line != ""
-          val = nil #TODO
-
           motif = /\"([^\"]*)\" ([^\"]*@[^\"]*) \"([^\"]*)\" \"([^\"]*)\"(.*)/
           parsed_line = motif.match line
 
           if parsed_line.nil?
-            fail "Format incorrect"
+            erreur "Format incorrect" #TODO
           elsif parsed_line[5] != ""
-            fail "Nombre incorrect d'arguments"
+            erreur_nb_arguments
           else
             nom, courriel, titre, auteurs = parsed_line[1], parsed_line[2], parsed_line[3], parsed_line[4]
             val = Emprunt.new(nom, courriel, titre, auteurs)
@@ -174,8 +171,7 @@ def emprunter( les_emprunts )
   titres = nouveaux_emprunts.select{|e| not(e.nil?)}.map{|e| e.titre}
   erreur "livre avec le meme titre deja emprunte" if les_emprunts.detect{|e| titres.include?(e.titre)}
 
-  les_emprunts = les_emprunts + nouveaux_emprunts.select{|e| not e.nil?} unless erreur
-  #p les_emprunts
+  les_emprunts = les_emprunts + nouveaux_emprunts.select{|e| not e.nil?}
   [les_emprunts, nil]
 end
 
@@ -191,9 +187,7 @@ end
 def rapporter( les_emprunts )
   titres =
     if ARGV.size > 0
-      (1..ARGV.size).collect do
-        titre = ARGV.shift
-      end
+      [ARGV.shift]
     else
       lines = STDIN.readlines
       lines.map do |line|
