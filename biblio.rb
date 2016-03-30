@@ -139,6 +139,8 @@ end
 def emprunter( les_emprunts )
   nouveaux_emprunts =
     if ARGV.size > 0
+      erreur_nb_arguments ARGV if ARGV.size < 4
+
       (1..ARGV.size / 4).collect do
         nom, courriel, titre, auteurs = ARGV.shift(4)
 
