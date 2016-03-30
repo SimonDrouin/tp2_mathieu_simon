@@ -177,7 +177,7 @@ end
 
 def emprunts( les_emprunts )
   nom = ARGV.shift
-  erreur "Emprunteur absent" unless nom
+  erreur_nb_arguments unless nom
 
   titres = les_emprunts.select {|e| e.nom == nom }.map {|e| e.titre }
 
@@ -185,13 +185,10 @@ def emprunts( les_emprunts )
 end
 
 def rapporter( les_emprunts )
-  erreur_nb_arguments unless ARGV.size <= 1
-
   titres =
-    if ARGV.size == 1
+    if ARGV.size > 0
       [ARGV.shift]
     else
-      val = nil
       lines = STDIN.readlines
       lines.map do |line|
         line = line.strip
@@ -214,7 +211,7 @@ end
 
 def trouver( les_emprunts )
   query = ARGV.shift
-  error "mot cle(s) invalide(s)" unless query
+  erreur_nb_arguments unless query
 
   titres = les_emprunts.select do |e|
     q = query.downcase
@@ -225,6 +222,13 @@ def trouver( les_emprunts )
 end
 
 def indiquer_perte( les_emprunts )
+  titre = ARGV.shift
+  erreur_nb_arguments unless titre
+
+  emprunt_perdu = les_emprunts.select{|e| e.titre == titre}.first
+  erreur "Aucun livre #{titre}" unless emprunt_perdu
+
+  les_emprunts.map{|e| e.indiquer_perte if e.titre == titre }
   [les_emprunts, nil]
 end
 
