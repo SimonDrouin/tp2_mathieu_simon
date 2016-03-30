@@ -185,17 +185,20 @@ def emprunts( les_emprunts )
 end
 
 def rapporter( les_emprunts )
+  erreur_nb_arguments unless ARGV.size <= 1
+
   titres =
-    if ARGV.size > 0
+    if ARGV.size == 1
       [ARGV.shift]
     else
+      val = nil
       lines = STDIN.readlines
       lines.map do |line|
         line = line.strip
         if line != ""
           motif = /\"(.*)\"/
           parsed_line = motif.match line
-
+          erreur_nb_arguments if !parsed_line || parsed_line.size != 2
           val = parsed_line[1]
         end
 
