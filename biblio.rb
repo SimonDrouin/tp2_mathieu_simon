@@ -187,13 +187,30 @@ def emprunts( les_emprunts )
 end
 
 def rapporter( les_emprunts )
-  titre = ARGV.shift
-  erreur "titre manquant" unless titre
+  titres =
+    if ARGV.size > 0
+      (1..ARGV.size).collect do
+        titre = ARGV.shift
+      end
+    else
+      lines = STDIN.readlines
+      lines.map do |line|
+        line = line.strip
+        if line != ""
+          motif = /\"(.*)\"/
+          parsed_line = motif.match line
 
-  emprunt = les_emprunts.select{ |emprunt| emprunt.titre == titre }.first
-  les_emprunts.delete(emprunt)
+          val = parsed_line[1]
+        end
 
-  [les_emprunts, nil]
+        val
+      end.select{ |t| not(t.nil?) }
+    end
+
+  titres_introuvables = titres.select{|t| not(les_emprunts.any?{|e| e.titre == t }) }
+  erreur "Aucun livre avec titre #{titres_introuvables.first}" unless titres_introuvables.empty?
+
+  [les_emprunts.select{|e| not(titres.include?(e.titre))}, nil]
 end
 
 def trouver( les_emprunts )
@@ -216,11 +233,10 @@ def emprunteur( les_emprunts )
   titre = ARGV.shift
   erreur "titre absent" unless titre
 
-  nom_emprunteur = les_emprunts.select do |emprunt|
-    emprunt.titre == titre
-  end.first.nom
+  emprunteur = les_emprunts.select { |e| e.titre == titre }.first
+  erreur "Aucun livre emprunte: #{titre}" unless emprunteur
 
-  [les_emprunts, nom_emprunteur]
+  [les_emprunts, emprunteur.nom]
 end
 
 
@@ -254,11 +270,11 @@ def get_commande_and_parse_options
           OPTIONS[:detruire] = true
         when /--depot=.*/
           # On definit le depot a utiliser, possiblement via l'option.
-          OPTIONS[:depot] = arg.scan(/[^=]*$/).first
+          arg.scan(/--depot=(.*)$/) {|m| OPTIONS[:depot] = m.first}
 
           debug "On utilise le depot suivant: #{OPTIONS.fetch(:depot)}"
         when /--format=.*/
-          OPTIONS[:format] = arg.scan(/[^=]*$/).first
+          arg.scan(/--format=(.*)$/) {|m| OPTIONS[:format] = m.first}
         end
       end
 
