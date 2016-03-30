@@ -155,7 +155,7 @@ def emprunter( les_emprunts )
           if parsed_line.nil?
             fail "Format incorrect" #TODO
           elsif parsed_line[5] != ""
-            fail "Nombre incorrect d'arguments" #TODO
+            erreur_nb_arguments
           else
             nom, courriel, titre, auteurs = parsed_line[1], parsed_line[2], parsed_line[3], parsed_line[4]
             val = Emprunt.new(nom, courriel, titre, auteurs)
@@ -185,9 +185,7 @@ end
 def rapporter( les_emprunts )
   titres =
     if ARGV.size > 0
-      (1..ARGV.size).collect do
-        titre = ARGV.shift
-      end
+      [ARGV.shift]
     else
       lines = STDIN.readlines
       lines.map do |line|
