@@ -155,7 +155,7 @@ def emprunter( les_emprunts )
           parsed_line = motif.match line
 
           if parsed_line.nil?
-            fail "Format incorrect" #TODO
+            erreur "Format incorrect" #TODO
           elsif parsed_line[5] != ""
             erreur_nb_arguments
           else
