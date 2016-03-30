@@ -154,14 +154,14 @@ def emprunter( les_emprunts )
         if line != ""
           val = nil #TODO
 
-          motif = /\"(.*)\" (.*@.*) \"(.*)\" \"(.*)\"/
+          motif = /\"([^\"]*)\" ([^\"]*@[^\"]*) \"([^\"]*)\" \"([^\"]*)\"(.*)/
           parsed_line = motif.match line
 
-          if parsed_line && parsed_line.size == 5
+          if parsed_line && parsed_line[5] == ""
             nom, courriel, titre, auteurs = parsed_line[1], parsed_line[2], parsed_line[3], parsed_line[4]
             val = Emprunt.new(nom, courriel, titre, auteurs)
           else # ligne non vide mais invalide.
-            erreur = true
+            STDERR.puts "Nombre incorrect d'arguments"
           end
 
           val
@@ -289,28 +289,6 @@ end
 #######################################################
 # Le programme principal
 #######################################################
-
-#
-# La strategie utilisee pour uniformiser le traitement des commandes
-# est la suivante (strategie differente de celle utilisee par
-# biblio.sh dans le devoir 1).
-#
-# Une commande est mise en oeuvre par une fonction auxiliaire.
-# Contrairement au devoir 1, c'est cette fonction *qui modifie
-# directement ARGV* (ceci est possible en Ruby, alors que ce ne
-# l'etait pas en bash), et ce en fonction des arguments consommes.
-#
-# La fonction ne retourne donc pas le nombre d'arguments
-# utilises. Comme on desire utiliser une approche fonctionnelle, la
-# fonction retourne plutot deux resultats (tableau de taille 2):
-#
-# 1. La liste des emprunts resultant de l'execution de la commande
-#    (donc liste possiblement modifiee)
-#
-# 2. L'information a afficher sur stdout (nil lorsqu'il n'y a aucun
-#    resultat a afficher).
-#
-
 
 # On analyse la commande indiquee en argument.
 commande = get_commande_and_parse_options
