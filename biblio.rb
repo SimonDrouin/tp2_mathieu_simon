@@ -193,11 +193,18 @@ def rapporter( les_emprunts )
       lines = STDIN.readlines
       lines.map do |line|
         line = line.strip
+
         if line != ""
-          motif = /\"(.*)\"/
+          motif = /\"([^\"]*)\"(.*)/
           parsed_line = motif.match line
 
-          val = parsed_line[1]
+          if parsed_line.nil?
+            erreur "Format incorrect"
+          elsif parsed_line[2] != ""
+            erreur_nb_arguments
+          else
+            val = parsed_line[1]
+          end
         end
 
         val
