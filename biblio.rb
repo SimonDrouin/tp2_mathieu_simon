@@ -130,9 +130,10 @@ end
 #################################################################
 
 def lister( les_emprunts )
-  emprunts = les_emprunts.map {|emprunt| emprunt.to_s(OPTIONS[:format]) }
+  liste_emprunts = les_emprunts.select{|e| OPTIONS[:inclure_perdus] ? true : not(e.perdu?) }
+  liste_emprunts = liste_emprunts.map{|e| e.to_s(OPTIONS[:format])}
 
-  [les_emprunts, emprunts.join("\n")]
+  [les_emprunts, liste_emprunts.join("\n")]
 end
 
 
@@ -155,7 +156,7 @@ def emprunter( les_emprunts )
           parsed_line = motif.match line
 
           if parsed_line.nil?
-            erreur "Format incorrect" #TODO
+            erreur "Format incorrect"
           elsif parsed_line[5] != ""
             erreur_nb_arguments
           else
@@ -177,7 +178,7 @@ end
 
 def emprunts( les_emprunts )
   nom = ARGV.shift
-  erreur "Emprunteur absent" unless nom
+  erreur_nb_arguments unless nom
 
   titres = les_emprunts.select {|e| e.nom == nom }.map {|e| e.titre }
 
@@ -211,7 +212,7 @@ end
 
 def trouver( les_emprunts )
   query = ARGV.shift
-  error "mot cle(s) invalide(s)" unless query
+  erreur_nb_arguments unless query
 
   titres = les_emprunts.select do |e|
     q = query.downcase
@@ -222,6 +223,13 @@ def trouver( les_emprunts )
 end
 
 def indiquer_perte( les_emprunts )
+  titre = ARGV.shift
+  erreur_nb_arguments unless titre
+
+  emprunt_perdu = les_emprunts.select{|e| e.titre == titre}.first
+  erreur "Aucun livre #{titre}" unless emprunt_perdu
+
+  les_emprunts.map{|e| e.indiquer_perte if e.titre == titre }
   [les_emprunts, nil]
 end
 
@@ -271,6 +279,9 @@ def get_commande_and_parse_options
           debug "On utilise le depot suivant: #{OPTIONS.fetch(:depot)}"
         when /--format=.*/
           arg.scan(/--format=(.*)$/) {|m| OPTIONS[:format] = m.first}
+
+        when /--inclure_perdus/
+          OPTIONS[:inclure_perdus] = true
         end
       end
 
