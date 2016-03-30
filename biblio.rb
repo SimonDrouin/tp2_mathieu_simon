@@ -198,7 +198,7 @@ def rapporter( les_emprunts )
         if line != ""
           motif = /\"(.*)\"/
           parsed_line = motif.match line
-          erreur_nb_arguments if !parsed_line || parsed_line.size != 2
+          erreur_nb_arguments if parsed_line.nil?
           val = parsed_line[1]
         end
 
